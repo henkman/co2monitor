@@ -19,14 +19,21 @@ import (
 //
 type JsonCO2Monitor struct {
 	co2monitor.CO2Monitor
+	reading co2monitor.Reading
 }
 
-func (jcm JsonCO2Monitor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var reading co2monitor.Reading
-	if err := jcm.Read(&reading); err != nil {
-		http.Error(w, "error reading values", http.StatusInternalServerError)
-		return
+// Run this in a go routine
+func (jcm *JsonCO2Monitor) Run() {
+	for {
+		var reading co2monitor.Reading
+		if err := jcm.Read(&reading); err == nil {
+			jcm.reading = reading
+		}
 	}
+}
+
+func (jcm *JsonCO2Monitor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	reading := jcm.reading
 	var temp float64
 	switch r.URL.Query().Get("u") {
 	case "c":
