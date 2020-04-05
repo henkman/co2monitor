@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>CO2Monitor</title>
+	<style>
+		body {
+			display: grid;
+			place-items: center;
+			height: 80vh;
+		}
+
+		main {
+			background-color: lightgray;
+			width: 600px;
+			padding: 5px;
+			box-shadow: 2px 2px darkgrey;
+		}
+
+		section {
+			width: 100%;
+		}
+
+		#controls {
+			display: flex;
+			justify-content: center;
+		}
+
+		#controls>* {
+			margin-left: 5px;
+		}
+
+		#reading {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			font-size: 7em;
+			height: 300px;
+		}
+
+		#timer {
+			width: 40px;
+		}
+
+		#volume {
+			width: 45px;
+		}
+
+		#co2.horrible {
+			color: red;
+		}
+
+		#co2.lousy {
+			color: #fda32c;
+		}
+
+		#co2.bad {
+			color: #FDFF00;
+		}
+
+		#co2.good {
+			color: #568203;
+		}
+
+		#co2.excellent {
+			color: #228B22;
+		}
+
+		#co2.perfect {
+			color: #29AB87;
+		}
+	</style>
+</head>
+
+<body>
+	<main>
+		<section id="controls">
+			<button id="refresh">Refresh</button>
+			<select id="unit" title="unit">
+				<option selected value="c">Celcius</option>
+				<option value="f">Fahrenheit</option>
+				<option value="k">Kelvin</option>
+			</select>
+			<input id="timer" title="timer" placeholder="timer" type="number" min="3" max="360" step="1" value="3">
+			<input id="volume" title="volume" placeholder="volume" type="number" min="0" max="1" step="0.05"
+				value="0.2">
+		</section>
+		<section id="reading">
+			<div id="co2"></div>
+			<div id="temperature"></div>
+		</section>
+	</main>
+	<script>
+		const $unit = document.getElementById("unit"),
+			$refresh = document.getElementById("refresh"),
+			$co2 = document.getElementById("co2"),
+			$temperature = document.getElementById("temperature"),
+			$timer = document.getElementById("timer"),
+			$volume = document.getElementById("volume"),
+			$horrible = new Audio("horrible.mp3"),
+			$lousy = new Audio("lousy.mp3"),
+			$bad = new Audio("bad.mp3"),
+			$good = new Audio("good.mp3"),
+			$excellent = new Audio("excellent.mp3"),
+			$perfect = new Audio("perfect.mp3");
+		let lastReading,
+			timerHandler;
+		$refresh.addEventListener("click", () => {
+			$refresh.disabled = true;
+			const xhr = new XMLHttpRequest();
+			xhr.open("GET", "/read?u=" + $unit.value);
+			xhr.send();
+			xhr.onreadystatechange = () => {
+				if (xhr.readyState !== 4) {
+					return;
+				}
+				const reading = JSON.parse(xhr.responseText);
+				$co2.innerText = reading.c + " ppm";
+
+				if (reading.c >= 1200) {
+					if (lastReading && $volume.value != 0.0 && lastReading.c < 1200) {
+						$horrible.volume = $volume.value;
+						$horrible.play();
+					}
+					$co2.className = "horrible";
+				} else if (reading.c >= 1000) {
+					if (lastReading && $volume.value != 0.0 && !(lastReading.c < 1200 && lastReading.c >= 1000)) {
+						$lousy.volume = $volume.value;
+						$lousy.play();
+					}
+					$co2.className = "lousy";
+				} else if (reading.c >= 800) {
+					if (lastReading && $volume.value != 0.0 && !(lastReading.c < 1000 && lastReading.c >= 800)) {
+						$bad.volume = $volume.value;
+						$bad.play();
+					}
+					$co2.className = "bad";
+				} else if (reading.c >= 600) {
+					if (lastReading && $volume.value != 0.0 && !(lastReading.c < 800 && lastReading.c >= 600)) {
+						$good.volume = $volume.value;
+						$good.play();
+					}
+					$co2.className = "good";
+				} else if (reading.c >= 400) {
+					if (lastReading && $volume.value != 0.0 && !(lastReading.c < 600 && lastReading.c >= 400)) {
+						$excellent.volume = $volume.value;
+						$excellent.play();
+					}
+					$co2.className = "excellent";
+				} else {
+					if (lastReading && $volume.value != 0.0 && !(lastReading.c < 400)) {
+						$perfect.volume = $volume.value;
+						$perfect.play();
+					}
+					$co2.className = "perfect";
+				}
+				lastReading = reading;
+				const temp = Math.round(reading.t * 100) / 100;
+				$temperature.innerText = temp + " °" + $unit.value;
+				$refresh.disabled = false;
+			};
+			xhr.onerror = () => {
+				$refresh.disabled = false;
+			};
+		});
+		$unit.addEventListener("change", () => {
+			$refresh.click();
+		});
+		$timer.addEventListener("change", (e) => {
+			if (timerHandler) {
+				window.clearInterval(timerHandler);
+			}
+			timerHandler = window.setInterval(() => {
+				if (!$refresh.disabled) {
+					$refresh.click();
+				}
+			}, $timer.value * 1000);
+		});
+		const params = new URLSearchParams(document.location.search);
+		if (params.get("u")) {
+			$unit.value = params.get("u");
+		}
+		if (params.get("t")) {
+			$timer.value = params.get("t");
+		}
+		if (params.get("v")) {
+			$volume.value = params.get("v");
+		}
+		$timer.dispatchEvent(new Event('change'));
+		$refresh.click();
+	</script>
+</body>
+
+</html>
