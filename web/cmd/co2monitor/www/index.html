@@ -188,6 +188,9 @@
 		if (params.get("v")) {
 			$volume.value = params.get("v");
 		}
+		if (params.get("b")) {
+			document.body.style.backgroundColor = params.get("b");
+		}
 		$timer.dispatchEvent(new Event('change'));
 		$refresh.click();
 	</script>
