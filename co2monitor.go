@@ -107,19 +107,13 @@ func (cm *CO2Monitor) Close() error {
 }
 
 func decrypt(key, data []byte) {
-	var tmp [8]uint
+	var tmp [8]byte
 	for i, v := range []int{2, 4, 0, 7, 1, 6, 5, 3} {
-		tmp[v] = uint(data[i])
-	}
-	for i := 0; i < 8; i++ {
-		tmp[i] = tmp[i] ^ uint(key[i])
-	}
-	var first [8]byte
-	for i := 0; i < 8; i++ {
-		first[i] = byte(((tmp[i] >> 3) | (tmp[(i-1+8)%8] << 5)) & 0xff)
+		tmp[v] = data[i] ^ key[v]
 	}
 	second := []byte{0x84, 0x47, 0x56, 0xd6, 0x07, 0x93, 0x93, 0x56}
-	for i := 0; i < 8; i++ {
-		data[i] = byte((0x100 + uint(first[i]) - uint(second[i])) & 0xff)
+	data[0] = (tmp[0] >> 3) | (tmp[7] << 5) - second[0] + 0xFF + 1
+	for i := 1; i < 8; i++ {
+		data[i] = ((tmp[i] >> 3) | (tmp[i-1] << 5)) - second[i] + 0xFF + 1
 	}
 }
