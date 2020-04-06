@@ -74,25 +74,31 @@ func (cm *CO2Monitor) Read(r *Reading) error {
 	var buf [8]byte
 	var readtemp, readco2 bool
 	for {
-		n, err := cm.device.Read(buf[:])
+		_, err := cm.device.Read(buf[:])
 		if err != nil {
 			return CouldNotReadFromDevice
 		}
-		decrypt(cm.key[:], buf[:n])
-		const (
-			Temp = 0x42
-			CO2  = 0x50
-		)
-		switch buf[0] {
-		case CO2:
-			value := uint(buf[1])<<8 | uint(buf[2])
+		first := buf[2] ^ cm.key[0]
+		last := buf[3] ^ cm.key[7]
+		unit := ((first >> 3) | (last << 5)) - 0x84
+		switch unit {
+		case 0x50:
+			second := buf[4] ^ cm.key[1]
+			third := buf[0] ^ cm.key[2]
+			high := ((second >> 3) | (first << 5)) - 0x47
+			low := ((third >> 3) | (second << 5)) - 0x56
+			value := uint(high)<<8 | uint(low)
 			r.CO2PPM = int(value)
 			if readco2 {
 				return nil
 			}
 			readtemp = true
-		case Temp:
-			value := uint(buf[1])<<8 | uint(buf[2])
+		case 0x42:
+			second := buf[4] ^ cm.key[1]
+			third := buf[0] ^ cm.key[2]
+			high := ((second >> 3) | (first << 5)) - 0x47
+			low := ((third >> 3) | (second << 5)) - 0x56
+			value := uint(high)<<8 | uint(low)
 			r.TemperatureKelvin = float64(value) / 16.0
 			if readtemp {
 				return nil
@@ -104,19 +110,4 @@ func (cm *CO2Monitor) Read(r *Reading) error {
 
 func (cm *CO2Monitor) Close() error {
 	return cm.device.Close()
-}
-
-func decrypt(key, data []byte) {
-	var tmp [8]byte
-	for i, v := range []int{2, 4, 0, 7, 1, 6, 5, 3} {
-		tmp[v] = data[i] ^ key[v]
-	}
-	data[0] = ((tmp[0] >> 3) | (tmp[7] << 5)) - 0x84
-	data[1] = ((tmp[1] >> 3) | (tmp[0] << 5)) - 0x47
-	data[2] = ((tmp[2] >> 3) | (tmp[1] << 5)) - 0x56
-	data[3] = ((tmp[3] >> 3) | (tmp[2] << 5)) - 0xd6
-	data[4] = ((tmp[4] >> 3) | (tmp[3] << 5)) - 0x07
-	data[5] = ((tmp[5] >> 3) | (tmp[4] << 5)) - 0x93
-	data[6] = ((tmp[6] >> 3) | (tmp[5] << 5)) - 0x93
-	data[7] = ((tmp[7] >> 3) | (tmp[6] << 5)) - 0x56
 }
