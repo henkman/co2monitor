@@ -111,9 +111,12 @@ func decrypt(key, data []byte) {
 	for i, v := range []int{2, 4, 0, 7, 1, 6, 5, 3} {
 		tmp[v] = data[i] ^ key[v]
 	}
-	second := []byte{0x84, 0x47, 0x56, 0xd6, 0x07, 0x93, 0x93, 0x56}
-	data[0] = (tmp[0] >> 3) | (tmp[7] << 5) - second[0] + 0xFF + 1
-	for i := 1; i < 8; i++ {
-		data[i] = ((tmp[i] >> 3) | (tmp[i-1] << 5)) - second[i] + 0xFF + 1
-	}
+	data[0] = ((tmp[0] >> 3) | (tmp[7] << 5)) - 0x84
+	data[1] = ((tmp[1] >> 3) | (tmp[0] << 5)) - 0x47
+	data[2] = ((tmp[2] >> 3) | (tmp[1] << 5)) - 0x56
+	data[3] = ((tmp[3] >> 3) | (tmp[2] << 5)) - 0xd6
+	data[4] = ((tmp[4] >> 3) | (tmp[3] << 5)) - 0x07
+	data[5] = ((tmp[5] >> 3) | (tmp[4] << 5)) - 0x93
+	data[6] = ((tmp[6] >> 3) | (tmp[5] << 5)) - 0x93
+	data[7] = ((tmp[7] >> 3) | (tmp[6] << 5)) - 0x56
 }
