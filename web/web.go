@@ -1,7 +1,7 @@
 package web
 
 import (
-	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/henkman/co2monitor"
@@ -40,17 +40,9 @@ func (jcm *JsonCO2Monitor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		temp = reading.TemperatureCelcius()
 	case "f":
 		temp = reading.TemperatureFahrenheit()
-	case "k":
-		fallthrough
 	default:
 		temp = reading.TemperatureKelvin
 	}
 	w.Header().Set("content-type", "application/json")
-	json.NewEncoder(w).Encode(struct {
-		Temp float64 `json:"t"`
-		CO2  int     `json:"c"`
-	}{
-		Temp: temp,
-		CO2:  reading.CO2PPM,
-	})
+	fmt.Fprintf(w, "[%f,%d]", temp, reading.CO2PPM)
 }

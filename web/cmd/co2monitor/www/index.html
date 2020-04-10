@@ -117,48 +117,47 @@
 					return;
 				}
 				const reading = JSON.parse(xhr.responseText);
-				$co2.innerText = reading.c + " ppm";
-
-				if (reading.c >= 1200) {
-					if (lastReading && $volume.value != 0.0 && lastReading.c < 1200) {
+				$co2.innerText = reading[1] + " ppm";
+				const temp = Math.round(reading[0] * 100) / 100;
+				$temperature.innerText = temp + " °" + $unit.value;
+				if (reading[1] >= 1200) {
+					if (lastReading && $volume.value != 0.0 && lastReading[1] < 1200) {
 						$horrible.volume = $volume.value;
 						$horrible.play();
 					}
 					$co2.className = "horrible";
-				} else if (reading.c >= 1000) {
-					if (lastReading && $volume.value != 0.0 && !(lastReading.c < 1200 && lastReading.c >= 1000)) {
+				} else if (reading[1] >= 1000) {
+					if (lastReading && $volume.value != 0.0 && !(lastReading[1] < 1200 && lastReading[1] >= 1000)) {
 						$lousy.volume = $volume.value;
 						$lousy.play();
 					}
 					$co2.className = "lousy";
-				} else if (reading.c >= 800) {
-					if (lastReading && $volume.value != 0.0 && !(lastReading.c < 1000 && lastReading.c >= 800)) {
+				} else if (reading[1] >= 800) {
+					if (lastReading && $volume.value != 0.0 && !(lastReading[1] < 1000 && lastReading[1] >= 800)) {
 						$bad.volume = $volume.value;
 						$bad.play();
 					}
 					$co2.className = "bad";
-				} else if (reading.c >= 600) {
-					if (lastReading && $volume.value != 0.0 && !(lastReading.c < 800 && lastReading.c >= 600)) {
+				} else if (reading[1] >= 600) {
+					if (lastReading && $volume.value != 0.0 && !(lastReading[1] < 800 && lastReading[1] >= 600)) {
 						$good.volume = $volume.value;
 						$good.play();
 					}
 					$co2.className = "good";
-				} else if (reading.c >= 400) {
-					if (lastReading && $volume.value != 0.0 && !(lastReading.c < 600 && lastReading.c >= 400)) {
+				} else if (reading[1] >= 400) {
+					if (lastReading && $volume.value != 0.0 && !(lastReading[1] < 600 && lastReading[1] >= 400)) {
 						$excellent.volume = $volume.value;
 						$excellent.play();
 					}
 					$co2.className = "excellent";
 				} else {
-					if (lastReading && $volume.value != 0.0 && !(lastReading.c < 400)) {
+					if (lastReading && $volume.value != 0.0 && !(lastReading[1] < 400)) {
 						$perfect.volume = $volume.value;
 						$perfect.play();
 					}
 					$co2.className = "perfect";
 				}
 				lastReading = reading;
-				const temp = Math.round(reading.t * 100) / 100;
-				$temperature.innerText = temp + " °" + $unit.value;
 				$refresh.disabled = false;
 			};
 			xhr.onerror = () => {
