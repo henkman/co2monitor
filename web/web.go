@@ -24,9 +24,12 @@ type JsonCO2Monitor struct {
 
 // Run this in a go routine
 func (jcm *JsonCO2Monitor) Run() {
+	var (
+		reading co2monitor.Reading
+		buf     [8]byte
+	)
 	for {
-		var reading co2monitor.Reading
-		if err := jcm.Read(&reading); err == nil {
+		if err := jcm.Read(&reading, &buf); err == nil {
 			jcm.reading = reading
 		}
 	}

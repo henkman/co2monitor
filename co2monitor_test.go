@@ -14,7 +14,8 @@ func TestReading(t *testing.T) {
 	}
 	defer cm.Close()
 	var r co2monitor.Reading
-	if err := cm.Read(&r); err != nil {
+	var buf [8]byte
+	if err := cm.Read(&r, &buf); err != nil {
 		t.Fatal(err)
 	}
 	fmt.Printf("CO2 PPM: %d\nTemp °K: %f\nTemp °C: %f\nTemp °F: %f\n",

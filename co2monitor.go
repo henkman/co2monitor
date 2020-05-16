@@ -70,8 +70,7 @@ var (
 
 // Reads a fresh reading into r
 // Returns an error in case of a read error
-func (cm *CO2Monitor) Read(r *Reading) error {
-	var buf [8]byte
+func (cm *CO2Monitor) Read(r *Reading, buf *[8]byte) error {
 	var readtemp, readco2 bool
 	for {
 		_, err := cm.device.Read(buf[:])
