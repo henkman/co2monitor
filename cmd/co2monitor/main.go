@@ -3,10 +3,11 @@ package main
 import (
 	"fmt"
 
-	"github.com/henkman/co2monitor"
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
 	"github.com/lxn/win"
+
+	"github.com/henkman/co2monitor"
 )
 
 var (
@@ -59,32 +60,56 @@ func main() {
 	}()
 	defer co2mon.Close()
 
+	const (
+		HEIGHT    = 350
+		FONT_SIZE = 80
+	)
+
+	var oh = HEIGHT
+
 	var appIcon, _ = walk.NewIconFromResourceId(2)
 	if err := (MainWindow{
 		Icon:     appIcon,
 		AssignTo: &mw,
 		Title:    "CO2Monitor",
 		Size: Size{
-			Width:  500,
-			Height: 260,
+			Width:  560,
+			Height: HEIGHT,
 		},
-		Layout: VBox{},
+		MinSize: Size{
+			Width:  560,
+			Height: HEIGHT,
+		},
+		OnSizeChanged: func() {
+			s := mw.Size()
+			h := s.Height
+			if h == oh {
+				return
+			}
+			rh := float32(h) / float32(HEIGHT)
+			nfs := float32(FONT_SIZE) * rh
+			f, _ := walk.NewFont("Segoe UI", int(nfs), walk.FontStyle(0))
+			co2Label.SetFont(f)
+			tempLabel.SetFont(f)
+			oh = h
+		},
+		Background: SolidColorBrush{Color: walk.RGB(0xcc, 0xcc, 0xcc)},
+		Layout:     VBox{},
 		Children: []Widget{
 			Label{
-				AssignTo:     &co2Label,
-				Text:         "XXX PPM",
-				Font:         Font{Family: "Segoe UI", PointSize: 80},
-				TextColor:    ColorBad,
-				Background:   SolidColorBrush{Color: walk.RGB(0xcc, 0xcc, 0xcc)},
-				EllipsisMode: EllipsisEnd,
+				AssignTo:      &co2Label,
+				Text:          "XXX PPM",
+				Font:          Font{Family: "Segoe UI", PointSize: FONT_SIZE},
+				TextColor:     ColorBad,
+				EllipsisMode:  EllipsisEnd,
+				TextAlignment: AlignCenter,
 			},
 			Label{
-				AssignTo:     &tempLabel,
-				Text:         "XX.XX °C",
-				Font:         Font{Family: "Segoe UI", PointSize: 80},
-				TextColor:    ColorPerfect,
-				Background:   SolidColorBrush{Color: walk.RGB(0xcc, 0xcc, 0xcc)},
-				EllipsisMode: EllipsisEnd,
+				AssignTo:      &tempLabel,
+				Text:          "XX.XX °C",
+				Font:          Font{Family: "Segoe UI", PointSize: FONT_SIZE},
+				EllipsisMode:  EllipsisEnd,
+				TextAlignment: AlignCenter,
 			},
 		},
 	}.Create()); err != nil {
