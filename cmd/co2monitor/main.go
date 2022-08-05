@@ -97,17 +97,17 @@ func main() {
 		Layout:     VBox{},
 		Children: []Widget{
 			Label{
-				AssignTo:      &co2Label,
-				Text:          "XXX PPM",
+				AssignTo:      &tempLabel,
+				Text:          "XX.XX °C",
 				Font:          Font{Family: "Segoe UI", PointSize: FONT_SIZE},
-				TextColor:     ColorBad,
 				EllipsisMode:  EllipsisEnd,
 				TextAlignment: AlignCenter,
 			},
 			Label{
-				AssignTo:      &tempLabel,
-				Text:          "XX.XX °C",
+				AssignTo:      &co2Label,
+				Text:          "XXX PPM",
 				Font:          Font{Family: "Segoe UI", PointSize: FONT_SIZE},
+				TextColor:     ColorBad,
 				EllipsisMode:  EllipsisEnd,
 				TextAlignment: AlignCenter,
 			},
